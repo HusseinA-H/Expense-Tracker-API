@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
+
 
 class AuditLogResponse(BaseModel):
     id: uuid.UUID
@@ -18,6 +20,7 @@ class AuditLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class AuditLogFilter(BaseModel):
     page: int = Field(default=1, ge=1)

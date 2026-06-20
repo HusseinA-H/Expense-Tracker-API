@@ -19,8 +19,14 @@ from app.tasks.email_tasks import (
     _send_welcome_email_async,
     send_password_reset_email,
 )
-from app.tasks.maintenance_tasks import _archive_old_partitions_async, _cleanup_expired_tokens_async
-from app.tasks.report_tasks import _generate_csv_export_async, _generate_monthly_report_async
+from app.tasks.maintenance_tasks import (
+    _archive_old_partitions_async,
+    _cleanup_expired_tokens_async,
+)
+from app.tasks.report_tasks import (
+    _generate_csv_export_async,
+    _generate_monthly_report_async,
+)
 
 
 def _extract_email_content(mock_smtp) -> str:
@@ -85,7 +91,9 @@ def test_send_password_reset_email_task_eager(mock_smtp):
 
 
 @pytest.mark.asyncio
-async def test_send_budget_alert_email_task(test_user, uow: SQLAlchemyUnitOfWork, mock_smtp):
+async def test_send_budget_alert_email_task(
+    test_user, uow: SQLAlchemyUnitOfWork, mock_smtp
+):
     async with uow:
         categories = await uow.categories.get_all_accessible(uuid.uuid4())
         food_cat = next(c for c in categories if c.name == "Food")

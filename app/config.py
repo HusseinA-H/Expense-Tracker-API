@@ -3,6 +3,7 @@ import os
 from pydantic import computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -127,7 +128,9 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        origins = [
+            origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()
+        ]
         if self.is_prod or self.is_staging:
             if not origins or origins == ["*"]:
                 raise ValueError(
@@ -140,5 +143,6 @@ class Settings(BaseSettings):
     @property
     def trusted_hosts_list(self) -> list[str]:
         return [host.strip() for host in self.TRUSTED_HOSTS.split(",") if host.strip()]
+
 
 settings = Settings()

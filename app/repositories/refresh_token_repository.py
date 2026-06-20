@@ -1,10 +1,12 @@
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.refresh_token import RefreshToken
 from app.repositories.base import BaseRepository
+
 
 class RefreshTokenRepository(BaseRepository[RefreshToken]):
     """Repository handling RefreshToken queries."""

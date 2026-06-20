@@ -1,8 +1,11 @@
 import uuid
-from sqlalchemy import select, and_
+
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.budget import Budget
 from app.repositories.base import BaseRepository
+
 
 class BudgetRepository(BaseRepository[Budget]):
     """Repository handling Budget database queries."""
@@ -19,7 +22,7 @@ class BudgetRepository(BaseRepository[Budget]):
                 Budget.user_id == user_id,
                 Budget.category_id == category_id,
                 Budget.month == month,
-                Budget.year == year
+                Budget.year == year,
             )
         )
         result = await self.session.execute(stmt)
@@ -30,11 +33,7 @@ class BudgetRepository(BaseRepository[Budget]):
     ) -> list[Budget]:
         """Fetch all budgets configured for a user in a specific month/year period."""
         stmt = select(Budget).where(
-            and_(
-                Budget.user_id == user_id,
-                Budget.month == month,
-                Budget.year == year
-            )
+            and_(Budget.user_id == user_id, Budget.month == month, Budget.year == year)
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())

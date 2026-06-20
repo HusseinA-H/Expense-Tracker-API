@@ -1,8 +1,11 @@
 import uuid
 from abc import ABC, abstractmethod
 from datetime import date
+
 from sqlalchemy import and_, or_
+
 from app.models.transaction import Transaction
+
 
 class Specification(ABC):
     """Abstract base class for Specification pattern."""

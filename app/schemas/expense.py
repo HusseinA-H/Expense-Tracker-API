@@ -2,7 +2,9 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
+
 from pydantic import BaseModel, Field, field_validator
+
 
 class ExpenseBase(BaseModel):
     amount: Decimal = Field(..., gt=0, decimal_places=2)
@@ -19,8 +21,16 @@ class ExpenseBase(BaseModel):
     @classmethod
     def validate_payment_method(cls, v: str) -> str:
         v_lower = v.lower()
-        if v_lower not in ("cash", "credit_card", "debit_card", "bank_transfer", "other"):
-            raise ValueError("Payment method must be one of: cash, credit_card, debit_card, bank_transfer, other")
+        if v_lower not in (
+            "cash",
+            "credit_card",
+            "debit_card",
+            "bank_transfer",
+            "other",
+        ):
+            raise ValueError(
+                "Payment method must be one of: cash, credit_card, debit_card, bank_transfer, other"
+            )
         return v_lower
 
     @field_validator("currency")
@@ -31,8 +41,10 @@ class ExpenseBase(BaseModel):
             raise ValueError("Currency must contain only letters")
         return v_upper
 
+
 class ExpenseCreate(ExpenseBase):
     pass
+
 
 class ExpenseUpdate(BaseModel):
     amount: Optional[Decimal] = Field(default=None, gt=0, decimal_places=2)
@@ -50,8 +62,16 @@ class ExpenseUpdate(BaseModel):
     def validate_payment_method(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             v_lower = v.lower()
-            if v_lower not in ("cash", "credit_card", "debit_card", "bank_transfer", "other"):
-                raise ValueError("Payment method must be one of: cash, credit_card, debit_card, bank_transfer, other")
+            if v_lower not in (
+                "cash",
+                "credit_card",
+                "debit_card",
+                "bank_transfer",
+                "other",
+            ):
+                raise ValueError(
+                    "Payment method must be one of: cash, credit_card, debit_card, bank_transfer, other"
+                )
             return v_lower
         return v
 
@@ -65,6 +85,7 @@ class ExpenseUpdate(BaseModel):
             return v_upper
         return v
 
+
 class ExpenseResponse(ExpenseBase):
     id: uuid.UUID
     user_id: uuid.UUID
@@ -73,6 +94,4 @@ class ExpenseResponse(ExpenseBase):
 
     class Config:
         from_attributes = True
-        json_encoders = {
-            Decimal: lambda v: float(v)
-        }
+        json_encoders = {Decimal: lambda v: float(v)}

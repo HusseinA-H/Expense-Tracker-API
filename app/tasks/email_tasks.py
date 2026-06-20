@@ -30,7 +30,11 @@ async def _send_welcome_email_async(user_id: str) -> dict[str, Any]:
             to_email=user.email,
             first_name=user.first_name,
         )
-        return {"status": "sent" if sent else "failed", "user_id": user_id, "email": user.email}
+        return {
+            "status": "sent" if sent else "failed",
+            "user_id": user_id,
+            "email": user.email,
+        }
 
 
 @celery_app.task(name="app.tasks.email_tasks.send_password_reset_email", queue="email")

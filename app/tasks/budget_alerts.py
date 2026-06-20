@@ -42,16 +42,13 @@ async def _evaluate_all_budgets_async() -> dict[str, Any]:
             if budget.alert_sent:
                 continue
 
-            stmt = (
-                select(func.sum(Transaction.amount))
-                .where(
-                    Transaction.user_id == budget.user_id,
-                    Transaction.category_id == budget.category_id,
-                    Transaction.transaction_type == "expense",
-                    Transaction.deleted_at.is_(None),
-                    extract("month", Transaction.transaction_date) == month,
-                    extract("year", Transaction.transaction_date) == year,
-                )
+            stmt = select(func.sum(Transaction.amount)).where(
+                Transaction.user_id == budget.user_id,
+                Transaction.category_id == budget.category_id,
+                Transaction.transaction_type == "expense",
+                Transaction.deleted_at.is_(None),
+                extract("month", Transaction.transaction_date) == month,
+                extract("year", Transaction.transaction_date) == year,
             )
             result = await uow._session.execute(stmt)
             spent_val = result.scalar() or 0.0

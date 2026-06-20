@@ -1,16 +1,20 @@
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Callable, Dict, List, Type
+
 import structlog
-from typing import Callable, Type, Dict, List
 
 logger = structlog.get_logger("app.events")
+
 
 @dataclass(frozen=True, kw_only=True)
 class DomainEvent:
     """Base class for all domain events."""
+
     event_id: uuid.UUID = field(default_factory=uuid.uuid4)
     occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 class EventBus:
     """Simple in-process async event bus. NOT a distributed message broker."""
@@ -35,10 +39,15 @@ class EventBus:
                 logger.error(
                     "Event handler failed",
                     event_type=type(event).__name__,
-                    handler=handler.__name__ if hasattr(handler, "__name__") else str(handler),
+                    handler=(
+                        handler.__name__
+                        if hasattr(handler, "__name__")
+                        else str(handler)
+                    ),
                     error=str(e),
-                    exc_info=True
+                    exc_info=True,
                 )
+
 
 # Global event bus singleton instance
 event_bus = EventBus()

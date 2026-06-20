@@ -1,6 +1,8 @@
 import logging
 import sys
+
 import structlog
+
 
 def setup_logging(log_level: str = "INFO") -> None:
     """Configure structlog for structured JSON logging on stdout."""
@@ -26,6 +28,7 @@ def setup_logging(log_level: str = "INFO") -> None:
         logger_factory=structlog.PrintLoggerFactory(),
         cache_logger_on_first_use=True,
     )
+
 
 def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     """Return a bound logger for the given module name."""

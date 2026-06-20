@@ -1,36 +1,40 @@
 import datetime
-import structlog
+
 import redis.asyncio as aioredis
-from fastapi import APIRouter, Depends, status, Response
+import structlog
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from app.api.deps import get_auth_service, oauth2_scheme, get_redis
-from app.services.auth_service import AuthService
-from app.schemas.user import UserCreate, UserResponse
+
+from app.api.deps import get_auth_service, get_redis, oauth2_scheme
+from app.core.security import verify_access_token
 from app.schemas.auth import (
     LoginRequest,
-    TokenResponse,
-    RefreshTokenRequest,
-    PasswordResetRequest,
     PasswordResetConfirmRequest,
+    PasswordResetRequest,
+    RefreshTokenRequest,
+    TokenResponse,
 )
-from app.core.security import verify_access_token
+from app.schemas.user import UserCreate, UserResponse
+from app.services.auth_service import AuthService
 
 router = APIRouter()
 logger = structlog.get_logger("app.api.auth")
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(
-    data: UserCreate,
-    auth_service: AuthService = Depends(get_auth_service)
+    data: UserCreate, auth_service: AuthService = Depends(get_auth_service)
 ):
     """Register a new user account."""
     user = await auth_service.register_user(data)
     return user
 
+
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    data: LoginRequest,
-    auth_service: AuthService = Depends(get_auth_service)
+    data: LoginRequest, auth_service: AuthService = Depends(get_auth_service)
 ):
     """Authenticate credentials and return access and refresh tokens (JSON body)."""
     tokens = await auth_service.login_user(data)
@@ -52,26 +56,27 @@ async def login_oauth2_token(
     )
     return tokens
 
+
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(
-    data: RefreshTokenRequest,
-    auth_service: AuthService = Depends(get_auth_service)
+    data: RefreshTokenRequest, auth_service: AuthService = Depends(get_auth_service)
 ):
     """Rotate the refresh token and return a new token pair."""
     tokens = await auth_service.rotate_refresh_token(data.refresh_token)
     return tokens
+
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     data: RefreshTokenRequest,
     token: str = Depends(oauth2_scheme),
     auth_service: AuthService = Depends(get_auth_service),
-    redis: aioredis.Redis = Depends(get_redis)
+    redis: aioredis.Redis = Depends(get_redis),
 ):
     """Log out user by blacklisting access token and revoking refresh token."""
     # 1. Revoke refresh token in database
     await auth_service.logout_user(data.refresh_token)
-    
+
     # 2. Blacklist access token in Redis
     try:
         payload = verify_access_token(token)
@@ -79,10 +84,12 @@ async def logout(
         remaining_ttl = payload.exp - now
         if remaining_ttl > 0:
             await redis.setex(f"blacklist:{payload.jti}", remaining_ttl, "true")
-            logger.info("Access token blacklisted on logout", jti=payload.jti, ttl=remaining_ttl)
+            logger.info(
+                "Access token blacklisted on logout", jti=payload.jti, ttl=remaining_ttl
+            )
     except Exception as e:
         logger.warning("Could not blacklist access token on logout", error=str(e))
-        
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

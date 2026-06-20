@@ -1,7 +1,9 @@
 import os
 import uuid
+
 import structlog
 from fastapi import UploadFile
+
 from app.core.exceptions import ValidationError
 
 logger = structlog.get_logger("app.services.file")
@@ -9,6 +11,7 @@ logger = structlog.get_logger("app.services.file")
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".pdf"}
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "application/pdf"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
 
 class FileService:
     """Service handling uploaded receipt files validation and local storage."""
@@ -24,7 +27,7 @@ class FileService:
         if ext not in ALLOWED_EXTENSIONS or file.content_type not in ALLOWED_MIME_TYPES:
             raise ValidationError(
                 message="Unsupported file type. Only JPG, PNG, and PDF are allowed.",
-                error_code="UNSUPPORTED_FILE_TYPE"
+                error_code="UNSUPPORTED_FILE_TYPE",
             )
 
         # 2. Validate file size
@@ -35,7 +38,7 @@ class FileService:
         if size > MAX_FILE_SIZE:
             raise ValidationError(
                 message="File size exceeds the maximum limit of 5 MB.",
-                error_code="FILE_TOO_LARGE"
+                error_code="FILE_TOO_LARGE",
             )
 
         # 3. Generate unique filename and save file
@@ -44,7 +47,7 @@ class FileService:
 
         with open(filepath, "wb") as f:
             f.write(content)
-                
+
         logger.info("Receipt file saved", filename=unique_filename, filepath=filepath)
 
         # Return URL path

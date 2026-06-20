@@ -72,31 +72,35 @@ async def _generate_csv_export_async(
 
         with open(filepath, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow([
-                "id",
-                "transaction_type",
-                "amount",
-                "currency",
-                "category_id",
-                "description",
-                "transaction_date",
-                "payment_method",
-                "receipt_url",
-                "tags",
-            ])
+            writer.writerow(
+                [
+                    "id",
+                    "transaction_type",
+                    "amount",
+                    "currency",
+                    "category_id",
+                    "description",
+                    "transaction_date",
+                    "payment_method",
+                    "receipt_url",
+                    "tags",
+                ]
+            )
             for tx in transactions:
-                writer.writerow([
-                    str(tx.id),
-                    tx.transaction_type,
-                    float(tx.amount),
-                    tx.currency,
-                    str(tx.category_id) if tx.category_id else "",
-                    tx.description or "",
-                    tx.transaction_date.isoformat(),
-                    tx.payment_method,
-                    tx.receipt_url or "",
-                    json.dumps(tx.tags),
-                ])
+                writer.writerow(
+                    [
+                        str(tx.id),
+                        tx.transaction_type,
+                        float(tx.amount),
+                        tx.currency,
+                        str(tx.category_id) if tx.category_id else "",
+                        tx.description or "",
+                        tx.transaction_date.isoformat(),
+                        tx.payment_method,
+                        tx.receipt_url or "",
+                        json.dumps(tx.tags),
+                    ]
+                )
 
         file_url = f"/exports/{filename}"
         await event_bus.publish(
@@ -143,13 +147,11 @@ async def _generate_monthly_report_async(
             extract("year", Transaction.transaction_date) == year,
         )
 
-        expense_stmt = (
-            select(func.sum(Transaction.amount))
-            .where(*base_filters, Transaction.transaction_type == "expense")
+        expense_stmt = select(func.sum(Transaction.amount)).where(
+            *base_filters, Transaction.transaction_type == "expense"
         )
-        income_stmt = (
-            select(func.sum(Transaction.amount))
-            .where(*base_filters, Transaction.transaction_type == "income")
+        income_stmt = select(func.sum(Transaction.amount)).where(
+            *base_filters, Transaction.transaction_type == "income"
         )
         count_stmt = select(func.count()).select_from(Transaction).where(*base_filters)
 
@@ -178,12 +180,14 @@ async def _generate_monthly_report_async(
         budget_summaries = []
         for budget in budgets:
             category = await uow.categories.get(budget.category_id)
-            budget_summaries.append({
-                "category": category.name if category else "Unknown",
-                "limit_amount": float(budget.limit_amount),
-                "alert_threshold": float(budget.alert_threshold),
-                "alert_sent": budget.alert_sent,
-            })
+            budget_summaries.append(
+                {
+                    "category": category.name if category else "Unknown",
+                    "limit_amount": float(budget.limit_amount),
+                    "alert_threshold": float(budget.alert_threshold),
+                    "alert_sent": budget.alert_sent,
+                }
+            )
 
         report = {
             "user_id": user_id,

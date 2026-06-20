@@ -1,7 +1,9 @@
 import hashlib
 import uuid
 from datetime import datetime, timedelta, timezone
+
 import structlog
+
 from app.config import settings
 from app.core.exceptions import AuthenticationError, ConflictError
 from app.core.security import (
@@ -11,16 +13,18 @@ from app.core.security import (
     verify_password,
 )
 from app.db.unit_of_work import SQLAlchemyUnitOfWork
-from app.models.user import User
 from app.models.refresh_token import RefreshToken
+from app.models.user import User
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.schemas.user import UserCreate
 
 logger = structlog.get_logger("app.services.auth")
 
+
 def _hash_token(token: str) -> str:
     """Hash a high-entropy string using SHA-256 for fast lookup and storage."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
 
 class AuthService:
     """Service handling registration, login, token rotation, and logout business logic."""
@@ -36,7 +40,7 @@ class AuthService:
             if existing_user:
                 raise ConflictError(
                     message=f"A user with email {data.email} already exists.",
-                    error_code="EMAIL_ALREADY_EXISTS"
+                    error_code="EMAIL_ALREADY_EXISTS",
                 )
 
             # Create User object
@@ -56,16 +60,20 @@ class AuthService:
             try:
                 from app.events.base import event_bus
                 from app.events.definitions import UserRegistered
+
                 await event_bus.publish(
-                    UserRegistered(
-                        user_id=user.id,
-                        email=user.email
-                    )
+                    UserRegistered(user_id=user.id, email=user.email)
                 )
             except Exception as e:
-                logger.error("Failed to publish UserRegistered event", error=str(e), exc_info=True)
-            
-            logger.info("User registered successfully", email=user.email, user_id=str(user.id))
+                logger.error(
+                    "Failed to publish UserRegistered event",
+                    error=str(e),
+                    exc_info=True,
+                )
+
+            logger.info(
+                "User registered successfully", email=user.email, user_id=str(user.id)
+            )
             return user
 
     async def login_user(self, data: LoginRequest) -> TokenResponse:
@@ -75,22 +83,25 @@ class AuthService:
             if not user or not verify_password(data.password, user.hashed_password):
                 raise AuthenticationError(
                     message="Invalid email or password.",
-                    error_code="INVALID_CREDENTIALS"
+                    error_code="INVALID_CREDENTIALS",
                 )
 
             if not user.is_active:
                 raise AuthenticationError(
-                    message="User account is deactivated.",
-                    error_code="USER_INACTIVE"
+                    message="User account is deactivated.", error_code="USER_INACTIVE"
                 )
 
             # 1. Generate access token
-            access_token = create_access_token(user_id=user.id, role=user.role, email=user.email)
+            access_token = create_access_token(
+                user_id=user.id, role=user.role, email=user.email
+            )
 
             # 2. Generate and store refresh token
             raw_refresh_token = generate_opaque_token()
             token_hash = _hash_token(raw_refresh_token)
-            expires_at = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+            expires_at = datetime.now(timezone.utc) + timedelta(
+                days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            )
 
             refresh_token_obj = RefreshToken(
                 user_id=user.id,
@@ -103,18 +114,17 @@ class AuthService:
             try:
                 from app.events.base import event_bus
                 from app.events.definitions import UserLoggedIn
+
                 ctx = structlog.contextvars.get_contextvars()
                 ip_addr = ctx.get("ip_address") or "unknown"
                 ua = ctx.get("user_agent") or "unknown"
                 await event_bus.publish(
-                    UserLoggedIn(
-                        user_id=user.id,
-                        ip_address=ip_addr,
-                        user_agent=ua
-                    )
+                    UserLoggedIn(user_id=user.id, ip_address=ip_addr, user_agent=ua)
                 )
             except Exception as e:
-                logger.error("Failed to publish UserLoggedIn event", error=str(e), exc_info=True)
+                logger.error(
+                    "Failed to publish UserLoggedIn event", error=str(e), exc_info=True
+                )
 
             logger.info("User logged in successfully", user_id=str(user.id))
             return TokenResponse(
@@ -125,24 +135,25 @@ class AuthService:
     async def rotate_refresh_token(self, refresh_token: str) -> TokenResponse:
         """Verify refresh token, invalidate it, and issue a new pair (Refresh Token Rotation)."""
         token_hash = _hash_token(refresh_token)
-        
+
         async with self.uow:
             token_record = await self.uow.refresh_tokens.get_by_token_hash(token_hash)
             if (
                 not token_record
                 or token_record.revoked_at is not None
-                or token_record.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc)
+                or token_record.expires_at.replace(tzinfo=timezone.utc)
+                < datetime.now(timezone.utc)
             ):
                 raise AuthenticationError(
                     message="Refresh token is invalid, expired, or has been revoked.",
-                    error_code="TOKEN_INVALID"
+                    error_code="TOKEN_INVALID",
                 )
 
             user = await self.uow.users.get(token_record.user_id)
             if not user or not user.is_active:
                 raise AuthenticationError(
                     message="Associated user is inactive or not found.",
-                    error_code="INVALID_CREDENTIALS"
+                    error_code="INVALID_CREDENTIALS",
                 )
 
             # Revoke current token
@@ -150,12 +161,16 @@ class AuthService:
             await self.uow.refresh_tokens.update(token_record)
 
             # Generate new access token
-            access_token = create_access_token(user_id=user.id, role=user.role, email=user.email)
+            access_token = create_access_token(
+                user_id=user.id, role=user.role, email=user.email
+            )
 
             # Generate new refresh token
             new_raw_refresh = generate_opaque_token()
             new_hash = _hash_token(new_raw_refresh)
-            expires_at = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+            expires_at = datetime.now(timezone.utc) + timedelta(
+                days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            )
 
             new_refresh_record = RefreshToken(
                 user_id=user.id,
@@ -180,9 +195,13 @@ class AuthService:
                 token_record.revoked_at = datetime.now(timezone.utc)
                 await self.uow.refresh_tokens.update(token_record)
                 await self.uow.commit()
-                logger.info("Refresh token revoked on logout", user_id=str(token_record.user_id))
+                logger.info(
+                    "Refresh token revoked on logout", user_id=str(token_record.user_id)
+                )
             else:
-                logger.warning("Attempted to logout with invalid or already revoked refresh token")
+                logger.warning(
+                    "Attempted to logout with invalid or already revoked refresh token"
+                )
 
     async def request_password_reset(self, email: str, redis) -> None:
         """Issue a password reset token and dispatch the reset email.

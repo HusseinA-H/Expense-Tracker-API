@@ -1,10 +1,13 @@
 import uuid
 from typing import Generic, Type, TypeVar
-from sqlalchemy import select, func
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
+
 
 class BaseRepository(Generic[ModelType]):
     """Generic async repository implementing standard CRUD operations."""

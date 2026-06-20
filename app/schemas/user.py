@@ -1,12 +1,16 @@
 import re
 import uuid
 from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # 1 uppercase, 1 lowercase, 1 digit, 1 special character, min 8 characters
-PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
+PASSWORD_REGEX = re.compile(
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+)
 # Letters and spaces only
 NAME_REGEX = re.compile(r"^[A-Za-z\s]+$")
+
 
 class UserBase(BaseModel):
     email: EmailStr = Field(..., max_length=255)
@@ -29,6 +33,7 @@ class UserBase(BaseModel):
             raise ValueError("Preferred currency must contain only letters")
         return v_upper
 
+
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
 
@@ -42,6 +47,7 @@ class UserCreate(UserBase):
                 "and one special character (@$!%*?&)."
             )
         return v
+
 
 class UserUpdate(BaseModel):
     first_name: str | None = Field(default=None, min_length=1, max_length=100)
@@ -65,6 +71,7 @@ class UserUpdate(BaseModel):
             return v_upper
         return v
 
+
 class UserResponse(UserBase):
     id: uuid.UUID
     is_active: bool
@@ -75,6 +82,7 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
 
 class PasswordChangeRequest(BaseModel):
     current_password: str = Field(..., min_length=8)
@@ -90,4 +98,3 @@ class PasswordChangeRequest(BaseModel):
                 "and one special character (@$!%*?&)."
             )
         return v
-
