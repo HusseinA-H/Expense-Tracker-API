@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker API — Portfolio Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="nav-brand">Expense Tracker API</div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#stack">Tech Stack</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#metrics">Metrics</a></li>
+      <li><a href="#timeline">Timeline</a></li>
+      <li><a href="#deployment">Deploy</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">◐</button>
+  </nav>
+
+  <header class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content reveal">
+      <span class="badge">Production-Ready · v1.0.0</span>
+      <h1>Expense Tracker API</h1>
+      <p class="hero-lead">Enterprise-grade personal finance REST backend built with FastAPI, async PostgreSQL, Redis, Celery, and OpenTelemetry — designed for real deployment, not demos.</p>
+      <div class="hero-actions">
+        <a href="https://github.com/HusseinA-H/Expense-Tracker-API" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+        <a href="#architecture" class="btn btn-ghost">Explore Architecture</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>47</strong><span>Integration Tests</span></div>
+        <div><strong>33+</strong><span>API Endpoints</span></div>
+        <div><strong>9</strong><span>Celery Tasks</span></div>
+        <div><strong>6</strong><span>Domain Entities</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="overview" class="section">
+      <div class="container reveal">
+        <h2>Project Overview</h2>
+        <p class="section-lead">A flagship portfolio project demonstrating senior backend engineering: clean architecture, security hardening, observability, and CI/CD automation.</p>
+        <div class="grid-3">
+          <article class="card">
+            <div class="card-icon">⚡</div>
+            <h3>High Performance</h3>
+            <p>Async SQLAlchemy, connection pooling, and non-blocking I/O for concurrent request handling.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🔒</div>
+            <h3>Security First</h3>
+            <p>JWT rotation, Redis blacklist, bcrypt, CORS, TrustedHost, and production OpenAPI toggle.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">📊</div>
+            <h3>Observable</h3>
+            <p>OpenTelemetry traces across API, database, Redis, and Celery workers to Jaeger.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section section-alt">
+      <div class="container reveal">
+        <h2>Architecture</h2>
+        <div class="arch-layout">
+          <div class="arch-diagram">
+            <img src="../assets/system-architecture.svg" alt="System architecture diagram"/>
+          </div>
+          <div class="arch-layers">
+            <div class="layer" data-layer="1"><span>Presentation</span> FastAPI endpoints, Pydantic, deps</div>
+            <div class="layer" data-layer="2"><span>Application</span> Services, events, Celery tasks</div>
+            <div class="layer" data-layer="3"><span>Domain</span> Models, specifications</div>
+            <div class="layer" data-layer="4"><span>Infrastructure</span> UoW, repositories, PostgreSQL, Redis</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack" class="section">
+      <div class="container reveal">
+        <h2>Technology Stack</h2>
+        <div class="tech-grid">
+          <div class="tech-item" data-tech="python"><span>Python 3.12</span></div>
+          <div class="tech-item" data-tech="fastapi"><span>FastAPI</span></div>
+          <div class="tech-item" data-tech="sql"><span>PostgreSQL 16</span></div>
+          <div class="tech-item" data-tech="redis"><span>Redis 7</span></div>
+          <div class="tech-item" data-tech="celery"><span>Celery</span></div>
+          <div class="tech-item" data-tech="docker"><span>Docker</span></div>
+          <div class="tech-item" data-tech="nginx"><span>Nginx</span></div>
+          <div class="tech-item" data-tech="otel"><span>OpenTelemetry</span></div>
+          <div class="tech-item" data-tech="github"><span>GitHub Actions</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section section-alt">
+      <div class="container reveal">
+        <h2>Core Features</h2>
+        <div class="feature-list">
+          <details open><summary>Authentication & OAuth2</summary><p>JWT access + refresh rotation, OAuth2 Swagger Authorize via /auth/token, password reset flow.</p></details>
+          <details><summary>Transactions & Receipts</summary><p>Expense/income/transfer CRUD, filtering, pagination, async receipt processing.</p></details>
+          <details><summary>Budgets & Alerts</summary><p>Category budgets with threshold alerts via hourly Celery Beat evaluation.</p></details>
+          <details><summary>Reports & Exports</summary><p>Async CSV and monthly reports with task polling endpoints.</p></details>
+          <details><summary>Audit Trail</summary><p>Append-only audit logs with admin query API for compliance forensics.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="metrics" class="section">
+      <div class="container reveal">
+        <h2>Engineering Metrics</h2>
+        <div class="metrics-dashboard">
+          <div class="metric-card"><div class="metric-value" data-count="47">0</div><div class="metric-label">Integration Tests</div></div>
+          <div class="metric-card"><div class="metric-value" data-count="100">0</div><div class="metric-label">Lint Clean %</div></div>
+          <div class="metric-card"><div class="metric-value" data-count="4">0</div><div class="metric-label">Uvicorn Workers</div></div>
+          <div class="metric-card"><div class="metric-value" data-count="15">0</div><div class="metric-label">Access Token (min)</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="timeline" class="section section-alt">
+      <div class="container reveal">
+        <h2>Development Timeline</h2>
+        <div class="timeline">
+          <div class="timeline-item"><time>Phase 1</time><h4>Core API & Auth</h4><p>Users, JWT, transactions, categories.</p></div>
+          <div class="timeline-item"><time>Phase 2</time><h4>Domain Expansion</h4><p>Budgets, audit, specifications pattern.</p></div>
+          <div class="timeline-item"><time>Phase 3</time><h4>Background Jobs</h4><p>Celery email, reports, receipts, Beat schedules.</p></div>
+          <div class="timeline-item"><time>Phase 4</time><h4>Production RC</h4><p>CI/CD, prod Docker, security hardening, observability.</p></div>
+          <div class="timeline-item active"><time>v1.0.0</time><h4>Public Release</h4><p>OAuth2 fix, documentation, portfolio assets.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="deployment" class="section">
+      <div class="container reveal">
+        <h2>Deployment Architecture</h2>
+        <img src="../assets/cicd-pipeline.svg" alt="CI/CD pipeline" class="deploy-diagram"/>
+        <div class="deploy-steps">
+          <div class="step"><span>1</span><p>Push triggers CI: lint + 47 integration tests</p></div>
+          <div class="step"><span>2</span><p>Tag v1.0.0 builds GHCR images</p></div>
+          <div class="step"><span>3</span><p>Deploy with docker-compose.prod.yml + Nginx</p></div>
+          <div class="step"><span>4</span><p>Health probes + Jaeger monitoring</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section section-alt">
+      <div class="container reveal">
+        <h2>Why This Project Matters</h2>
+        <p class="section-lead">Demonstrates end-to-end backend ownership: architecture, implementation, testing, DevOps, security, and documentation — the skills hiring managers look for in senior engineers.</p>
+        <div class="resume-highlights">
+          <ul>
+            <li>Designed layered FastAPI architecture with Unit of Work pattern</li>
+            <li>Implemented JWT auth with refresh rotation and OAuth2 Swagger integration</li>
+            <li>Built Celery background job system with Beat schedules</li>
+            <li>Added OpenTelemetry distributed tracing</li>
+            <li>Created CI/CD pipelines and production Docker overlay</li>
+            <li>Authored enterprise documentation and portfolio presentation</li>
+          </ul>
+        </div>
+        <p class="footer-link"><a href="https://github.com/HusseinA-H/Expense-Tracker-API">github.com/HusseinA-H/Expense-Tracker-API</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Expense Tracker API · MIT License · Built for portfolio showcase</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
