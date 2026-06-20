@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, release/**]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: "3.12"
+  SECRET_KEY: "ci_test_secret_key_minimum_32_chars_long_abc123"
+  DB_PASSWORD: "ci_postgres_password_123"
+  REDIS_PASSWORD: "ci_redis_password_123"
+  ENVIRONMENT: testing
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Black
+        run: black --check app tests
+      - name: isort
+        run: isort --check-only app tests
+      - name: Flake8
+        run: flake8 app tests
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: expense_tracker
+          POSTGRES_USER: expense_user
+          POSTGRES_PASSWORD: ci_postgres_password_123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U expense_user -d expense_tracker"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        env:
+          REDIS_PASSWORD: ci_redis_password_123
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli -a ci_redis_password_123 ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Wait for services
+        run: |
+          python - <<'PY'
+          import socket, time
+          def wait(host, port):
+              for _ in range(30):
+                  try:
+                      with socket.create_connection((host, port), timeout=2):
+                          return
+                  except OSError:
+                      time.sleep(2)
+              raise SystemExit(f"Service unavailable: {host}:{port}")
+          wait("127.0.0.1", 5432)
+          wait("127.0.0.1", 6379)
+          PY
+      - name: Run migrations
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: expense_user
+          DB_NAME: expense_tracker
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: alembic upgrade head
+      - name: Pytest
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: expense_user
+          DB_NAME: expense_tracker
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: pytest tests/integration -v --tb=short
+
+  docker-image:
+    name: Build API image
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        run: |
+          VERSION="${GITHUB_REF_NAME#refs/tags/v}"
+          if [ "$VERSION" = "$GITHUB_REF_NAME" ]; then VERSION="1.0.0-rc.1"; fi
+          IMAGE="ghcr.io/${{ github.repository }}/api"
+          docker buildx build \
+            -f docker/Dockerfile \
+            -t "$IMAGE:$VERSION" \
+            -t "$IMAGE:latest" \
+            --push .

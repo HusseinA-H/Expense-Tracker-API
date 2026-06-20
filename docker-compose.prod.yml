@@ -1,0 +1,98 @@
+# Staging / production overlay.
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.staging up -d
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: expensetracker-api:${APP_VERSION:-1.0.0-rc.1}
+    restart: unless-stopped
+    logging: *default-logging
+    volumes:
+      - app_uploads:/app/uploads
+      - app_exports:/app/exports
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-staging}
+      APP_VERSION: ${APP_VERSION:-1.0.0-rc.1}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://127.0.0.1:8000/api/v1/health/ready', timeout=5).raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+
+  postgres:
+    restart: unless-stopped
+    logging: *default-logging
+    ports: []  # not published externally in prod overlay
+
+  redis:
+    restart: unless-stopped
+    logging: *default-logging
+    ports: []
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.celery.prod
+    image: expensetracker-celery:${APP_VERSION:-1.0.0-rc.1}
+    restart: unless-stopped
+    logging: *default-logging
+    command: celery -A app.celery_app worker -l info -Q default,email -c 4
+    volumes:
+      - app_uploads:/app/uploads
+      - app_exports:/app/exports
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.celery.prod
+    image: expensetracker-celery:${APP_VERSION:-1.0.0-rc.1}
+    restart: unless-stopped
+    logging: *default-logging
+    command: celery -A app.celery_app beat -l info --pidfile=
+
+  celery-flower:
+    profiles: ["observability"]
+    restart: unless-stopped
+    ports: []
+
+  nginx:
+    volumes:
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    logging: *default-logging
+
+  jaeger:
+    profiles: ["observability"]
+    restart: unless-stopped
+
+  prometheus:
+    profiles: ["observability"]
+    restart: unless-stopped
+
+  grafana:
+    profiles: ["observability"]
+    restart: unless-stopped
+
+volumes:
+  app_uploads:
+  app_exports:
