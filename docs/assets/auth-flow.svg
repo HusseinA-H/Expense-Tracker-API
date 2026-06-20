@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-label="Authentication flow">
+  <rect width="800" height="480" fill="#0f172a" rx="12"/>
+  <text x="400" y="40" fill="#f1f5f9" font-family="Segoe UI,sans-serif" font-size="20" font-weight="700" text-anchor="middle">JWT Authentication Flow</text>
+  <g font-family="Segoe UI,sans-serif" font-size="13">
+    <rect x="60" y="80" width="140" height="50" rx="8" fill="#3b82f6"/><text x="130" y="110" fill="#fff" text-anchor="middle">Client</text>
+    <rect x="240" y="80" width="140" height="50" rx="8" fill="#10b981"/><text x="310" y="110" fill="#fff" text-anchor="middle">FastAPI</text>
+    <rect x="420" y="80" width="140" height="50" rx="8" fill="#6366f1"/><text x="490" y="110" fill="#fff" text-anchor="middle">AuthService</text>
+    <rect x="600" y="80" width="140" height="50" rx="8" fill="#0ea5e9"/><text x="670" y="110" fill="#fff" text-anchor="middle">PostgreSQL</text>
+    <rect x="420" y="180" width="140" height="50" rx="8" fill="#dc2626"/><text x="490" y="210" fill="#fff" text-anchor="middle">Redis</text>
+  </g>
+  <g fill="#cbd5e1" font-family="Segoe UI,sans-serif" font-size="12">
+    <text x="400" y="280" text-anchor="middle">1. POST /auth/login (JSON) or /auth/token (OAuth2 form)</text>
+    <text x="400" y="305" text-anchor="middle">2. Verify bcrypt password · issue access JWT (15m) + refresh token (7d)</text>
+    <text x="400" y="320" text-anchor="middle">3. Protected routes: Authorization: Bearer &lt;access_token&gt;</text>
+    <text x="400" y="340" text-anchor="middle">4. POST /auth/refresh rotates refresh token · POST /auth/logout blacklists JWT in Redis</text>
+    <text x="400" y="360" text-anchor="middle">5. Swagger Authorize ’ OAuth2 password grant ’ /auth/token (email as username)</text>
+  </g>
+  <rect x="80" y="400" width="640" height="56" rx="8" fill="#1e293b" stroke="#334155"/>
+  <text x="400" y="434" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="Segoe UI">Access token: HS256 · sub=user_id · jti for blacklist · exp enforced on every request</text>
+</svg>
