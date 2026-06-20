@@ -49,9 +49,7 @@ async def _archive_old_partitions_async() -> dict[str, Any]:
     partitions: list[dict[str, Any]] = []
 
     async with uow:
-        result = await uow._session.execute(
-            text(
-                """
+        result = await uow._session.execute(text("""
                 SELECT
                     c.relname AS partition_name,
                     pg_get_expr(c.relpartbound, c.oid) AS partition_bound
@@ -60,9 +58,7 @@ async def _archive_old_partitions_async() -> dict[str, Any]:
                 JOIN pg_class p ON i.inhparent = p.oid
                 WHERE p.relname = 'audit_logs'
                 ORDER BY c.relname
-            """
-            )
-        )
+            """))
         rows = result.fetchall()
         for row in rows:
             partitions.append(
