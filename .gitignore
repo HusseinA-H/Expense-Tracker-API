@@ -1,0 +1,135 @@
+# =============================================================================
+# Expense Tracker API — Enterprise .gitignore
+# =============================================================================
+
+# --- Environment & secrets (never commit) ---
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials.json
+*.secret
+
+# --- Arabic documentation (local only, not tracked) ---
+docs/pdf/
+docs/ar/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyo
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.dmypy.json
+dmypy.json
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+pytestdebug.log
+.cache/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# --- FastAPI / runtime ---
+uploads/
+exports/
+celerybeat-schedule
+celerybeat.pid
+*.db
+*.sqlite3
+instance/
+
+# --- Docker ---
+*.log
+docker-compose.override.yml
+.docker/
+
+# --- VS Code / Cursor / JetBrains ---
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.iml
+*.ipr
+*.iws
+.cursor/
+
+# --- Windows ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# --- Linux ---
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# --- Database / infra volumes ---
+pgdata/
+redisdata/
+grafana_data/
+prometheus_data/
+
+# --- Documentation build artifacts (keep committed PDFs) ---
+docs/pdf/build/
+docs/**/*.tmp
+docs/**/*.aux
+
+# --- Node (if added for docs tooling) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- OS / editor backups ---
+*.bak
+*.orig
+*.tmp
