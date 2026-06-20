@@ -47,7 +47,9 @@ def _render_budget_alert_html(
     limit_amount: float,
     spent_amount: float,
 ) -> str:
-    percentage = round((spent_amount / limit_amount) * 100, 1) if limit_amount > 0 else 0
+    percentage = (
+        round((spent_amount / limit_amount) * 100, 1) if limit_amount > 0 else 0
+    )
     return f"""
     <!DOCTYPE html>
     <html>

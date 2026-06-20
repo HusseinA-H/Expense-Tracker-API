@@ -1,14 +1,16 @@
 import time
 import uuid
+
 import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = structlog.get_logger("app.middleware")
 
+
 class LoggingAndRequestIdMiddleware:
     """Pure ASGI Middleware for X-Request-ID injection and structured request/response logging."""
-    
+
     def __init__(self, app):
         self.app = app
 
@@ -18,12 +20,16 @@ class LoggingAndRequestIdMiddleware:
             return
 
         start_time = time.perf_counter()
-        
+
         # Parse headers from scope (headers keys in ASGI scope are lowercase bytes)
         headers = dict(scope.get("headers", []))
-        
+
         request_id_bytes = headers.get(b"x-request-id")
-        request_id = request_id_bytes.decode("utf-8") if request_id_bytes else f"req_{uuid.uuid4().hex[:12]}"
+        request_id = (
+            request_id_bytes.decode("utf-8")
+            if request_id_bytes
+            else f"req_{uuid.uuid4().hex[:12]}"
+        )
 
         # Get user agent
         user_agent_bytes = headers.get(b"user-agent")
@@ -40,22 +46,17 @@ class LoggingAndRequestIdMiddleware:
         # Bind request_id, ip_address, and user_agent to structlog context variables
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(
-            request_id=request_id,
-            ip_address=ip_address,
-            user_agent=user_agent
+            request_id=request_id, ip_address=ip_address, user_agent=user_agent
         )
-        
+
         path = scope.get("path", "")
         method = scope.get("method", "")
         query_string = scope.get("query_string", b"").decode("utf-8")
-        
+
         logger.info(
-            "Request started",
-            method=method,
-            path=path,
-            query_params=query_string
+            "Request started", method=method, path=path, query_params=query_string
         )
-        
+
         status_code = [200]  # mutable list to capture response status in closure
 
         async def send_wrapper(message):
@@ -75,16 +76,16 @@ class LoggingAndRequestIdMiddleware:
                 method=method,
                 path=path,
                 duration_sec=round(duration, 4),
-                error=str(e)
+                error=str(e),
             )
             raise e
-            
+
         duration = time.perf_counter() - start_time
-        
+
         logger.info(
             "Request finished",
             method=method,
             path=path,
             status_code=status_code[0],
-            duration_sec=round(duration, 4)
+            duration_sec=round(duration, 4),
         )

@@ -89,7 +89,9 @@ async def get_report_task_status(
 
     payload = result.result
     if not isinstance(payload, dict):
-        return ReportTaskStatusResponse(task_id=task_id, status="completed", result={"data": payload})
+        return ReportTaskStatusResponse(
+            task_id=task_id, status="completed", result={"data": payload}
+        )
 
     task_user_id = payload.get("user_id")
     if task_user_id and task_user_id != str(current_user.id):

@@ -1,21 +1,23 @@
 import uuid
-import structlog
-from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+import structlog
 
 from app.db.unit_of_work import SQLAlchemyUnitOfWork
-from app.models.audit_log import AuditLog
 from app.events.definitions import (
-    UserRegistered,
-    UserLoggedIn,
-    TransactionCreated,
-    TransactionUpdated,
-    TransactionDeleted,
     BudgetExceeded,
-    ReportGenerated
+    ReportGenerated,
+    TransactionCreated,
+    TransactionDeleted,
+    TransactionUpdated,
+    UserLoggedIn,
+    UserRegistered,
 )
+from app.models.audit_log import AuditLog
 
 logger = structlog.get_logger("app.services.audit")
+
 
 class AuditService:
     """Service handling audit trail logging and admin queries."""
@@ -32,13 +34,13 @@ class AuditService:
         new_data: Optional[Dict[str, Any]] = None,
         user_id: Optional[uuid.UUID] = None,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> AuditLog:
         """Create and persist an append-only audit log entry."""
         # Retrieve correlation ID and client metadata from context variables if not provided
         ctx = structlog.contextvars.get_contextvars()
         request_id = ctx.get("request_id")
-        
+
         if not ip_address:
             ip_address = ctx.get("ip_address")
         if not user_agent:
@@ -54,17 +56,17 @@ class AuditService:
                 new_data=new_data,
                 ip_address=ip_address,
                 user_agent=user_agent,
-                request_id=request_id
+                request_id=request_id,
             )
             await self.uow.audit.add(log_entry)
             await self.uow.commit()
-            
+
             logger.info(
                 "Audit log recorded",
                 action=action,
                 entity_type=entity_type,
                 entity_id=str(entity_id) if entity_id else None,
-                user_id=str(user_id) if user_id else None
+                user_id=str(user_id) if user_id else None,
             )
             return log_entry
 
@@ -78,7 +80,7 @@ class AuditService:
         entity_id: Optional[uuid.UUID] = None,
         request_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
-        date_to: Optional[datetime] = None
+        date_to: Optional[datetime] = None,
     ) -> Tuple[List[AuditLog], int]:
         """Query paginated audit logs with filtering capability (Admin-only)."""
         async with self.uow:
@@ -91,7 +93,7 @@ class AuditService:
                 entity_id=entity_id,
                 request_id=request_id,
                 date_from=date_from,
-                date_to=date_to
+                date_to=date_to,
             )
             total = await self.uow.audit.count_filtered(
                 user_id=user_id,
@@ -100,7 +102,7 @@ class AuditService:
                 entity_id=entity_id,
                 request_id=request_id,
                 date_from=date_from,
-                date_to=date_to
+                date_to=date_to,
             )
             return items, total
 
@@ -113,7 +115,7 @@ class AuditService:
             entity_type="user",
             entity_id=event.user_id,
             new_data={"email": event.email},
-            user_id=event.user_id
+            user_id=event.user_id,
         )
 
     async def on_user_logged_in(self, event: UserLoggedIn) -> None:
@@ -124,7 +126,7 @@ class AuditService:
             entity_id=event.user_id,
             user_id=event.user_id,
             ip_address=event.ip_address,
-            user_agent=event.user_agent
+            user_agent=event.user_agent,
         )
 
     async def on_transaction_created(self, event: TransactionCreated) -> None:
@@ -139,9 +141,9 @@ class AuditService:
                 "currency": event.currency,
                 "category_id": str(event.category_id) if event.category_id else None,
                 "transaction_date": event.transaction_date.isoformat(),
-                "description": event.description
+                "description": event.description,
             },
-            user_id=event.user_id
+            user_id=event.user_id,
         )
 
     async def on_transaction_updated(self, event: TransactionUpdated) -> None:
@@ -152,7 +154,7 @@ class AuditService:
             entity_id=event.transaction_id,
             old_data=event.old_data,
             new_data=event.new_data,
-            user_id=event.user_id
+            user_id=event.user_id,
         )
 
     async def on_transaction_deleted(self, event: TransactionDeleted) -> None:
@@ -161,7 +163,7 @@ class AuditService:
             action="DELETE",
             entity_type="transaction",
             entity_id=event.transaction_id,
-            user_id=event.user_id
+            user_id=event.user_id,
         )
 
     async def on_budget_exceeded(self, event: BudgetExceeded) -> None:
@@ -174,9 +176,9 @@ class AuditService:
                 "category_name": event.category_name,
                 "limit_amount": float(event.limit_amount),
                 "spent_amount": float(event.spent_amount),
-                "percentage": float(event.percentage)
+                "percentage": float(event.percentage),
             },
-            user_id=event.user_id
+            user_id=event.user_id,
         )
 
     async def on_report_generated(self, event: ReportGenerated) -> None:
@@ -184,9 +186,6 @@ class AuditService:
         await self.record_log(
             action="GENERATE_REPORT",
             entity_type="report",
-            new_data={
-                "report_type": event.report_type,
-                "file_url": event.file_url
-            },
-            user_id=event.user_id
+            new_data={"report_type": event.report_type, "file_url": event.file_url},
+            user_id=event.user_id,
         )

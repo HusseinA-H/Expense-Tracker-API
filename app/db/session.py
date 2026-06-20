@@ -1,5 +1,7 @@
 from collections.abc import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app.config import settings
 
 # Primary engine with connection pooling parameters configured for production
@@ -13,10 +15,10 @@ engine = create_async_engine(
     echo=settings.is_dev,
     connect_args={
         "server_settings": {
-            "statement_timeout": "30000",                  # 30s limit on statements
-            "idle_in_transaction_session_timeout": "60000"  # 60s limit on idle tx
+            "statement_timeout": "30000",  # 30s limit on statements
+            "idle_in_transaction_session_timeout": "60000",  # 60s limit on idle tx
         }
-    }
+    },
 )
 
 # Read replica engine (optional but configured per section 33.5)
@@ -31,22 +33,19 @@ read_engine = create_async_engine(
     connect_args={
         "server_settings": {
             "statement_timeout": "30000",
-            "idle_in_transaction_session_timeout": "60000"
+            "idle_in_transaction_session_timeout": "60000",
         }
-    }
+    },
 )
 
 async_session_maker = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    bind=engine, class_=AsyncSession, expire_on_commit=False
 )
 
 async_read_session_maker = async_sessionmaker(
-    bind=read_engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    bind=read_engine, class_=AsyncSession, expire_on_commit=False
 )
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency injection to get DB write session."""
@@ -55,6 +54,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             yield session
         finally:
             await session.close()
+
 
 async def get_read_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency injection to get DB read session (from read replica)."""

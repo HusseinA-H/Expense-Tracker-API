@@ -1,11 +1,13 @@
 import uuid
 from datetime import date
 from typing import List, Tuple
+
 from app.core.exceptions import NotFoundError
-from app.services.transaction_service import TransactionService
 from app.models.transaction import Transaction
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 from app.schemas.transaction import TransactionCreate, TransactionUpdate
+from app.services.transaction_service import TransactionService
+
 
 class ExpenseService:
     """v1 backward-compatible facade over TransactionService."""
@@ -13,7 +15,9 @@ class ExpenseService:
     def __init__(self, transaction_service: TransactionService):
         self._txn = transaction_service
 
-    async def create_expense(self, user_id: uuid.UUID, data: ExpenseCreate) -> Transaction:
+    async def create_expense(
+        self, user_id: uuid.UUID, data: ExpenseCreate
+    ) -> Transaction:
         """Create a new expense (type=expense)."""
         return await self._txn.create_transaction(
             user_id=user_id,
@@ -32,13 +36,14 @@ class ExpenseService:
             ),
         )
 
-    async def get_expense(self, expense_id: uuid.UUID, user_id: uuid.UUID) -> Transaction:
+    async def get_expense(
+        self, expense_id: uuid.UUID, user_id: uuid.UUID
+    ) -> Transaction:
         """Retrieve a specific expense transaction."""
         txn = await self._txn.get_transaction(expense_id, user_id)
         if txn.transaction_type != "expense":
             raise NotFoundError(
-                message="Expense not found.",
-                error_code="EXPENSE_NOT_FOUND"
+                message="Expense not found.", error_code="EXPENSE_NOT_FOUND"
             )
         return txn
 
@@ -48,7 +53,7 @@ class ExpenseService:
         """Update an existing expense transaction."""
         # Ensure it is a valid expense first
         await self.get_expense(expense_id, user_id)
-        
+
         txn_update = TransactionUpdate(
             amount=data.amount,
             currency=data.currency,

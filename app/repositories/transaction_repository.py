@@ -1,9 +1,12 @@
 import uuid
-from sqlalchemy import select, func
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.domain.specifications import Specification
 from app.models.transaction import Transaction
 from app.repositories.base import BaseRepository
-from app.domain.specifications import Specification
+
 
 class TransactionRepository(BaseRepository[Transaction]):
     """Repository handling Transaction database queries with Specification support."""
@@ -17,11 +20,11 @@ class TransactionRepository(BaseRepository[Transaction]):
         page: int = 1,
         per_page: int = 20,
         sort_by: str = "transaction_date",
-        sort_order: str = "desc"
+        sort_order: str = "desc",
     ) -> list[Transaction]:
         """Fetch list of transactions satisfying a composite specification with pagination."""
         offset = (page - 1) * per_page
-        
+
         # Determine sorting column and direction
         sort_attr = getattr(Transaction, sort_by, Transaction.transaction_date)
         if sort_order.lower() == "desc":
@@ -41,10 +44,6 @@ class TransactionRepository(BaseRepository[Transaction]):
 
     async def count_filtered(self, spec: Specification) -> int:
         """Count total transactions matching a specification."""
-        stmt = (
-            select(func.count())
-            .select_from(Transaction)
-            .where(spec.to_expression())
-        )
+        stmt = select(func.count()).select_from(Transaction).where(spec.to_expression())
         result = await self.session.execute(stmt)
         return result.scalar() or 0

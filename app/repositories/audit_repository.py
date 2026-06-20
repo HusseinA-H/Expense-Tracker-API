@@ -1,10 +1,13 @@
 import uuid
 from datetime import datetime
-from typing import List, Tuple, Optional
-from sqlalchemy import select, func, and_
+from typing import List, Optional, Tuple
+
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.audit_log import AuditLog
 from app.repositories.base import BaseRepository
+
 
 class AuditRepository(BaseRepository[AuditLog]):
     """Repository handling AuditLog database queries (Append-only)."""
@@ -20,7 +23,7 @@ class AuditRepository(BaseRepository[AuditLog]):
         entity_id: Optional[uuid.UUID] = None,
         request_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
-        date_to: Optional[datetime] = None
+        date_to: Optional[datetime] = None,
     ):
         """Helper to build where clauses for filtering audit logs."""
         clauses = []
@@ -50,7 +53,7 @@ class AuditRepository(BaseRepository[AuditLog]):
         entity_id: Optional[uuid.UUID] = None,
         request_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
-        date_to: Optional[datetime] = None
+        date_to: Optional[datetime] = None,
     ) -> List[AuditLog]:
         """Fetch list of audit logs satisfying filters with pagination."""
         offset = (page - 1) * per_page
@@ -61,9 +64,9 @@ class AuditRepository(BaseRepository[AuditLog]):
             entity_id=entity_id,
             request_id=request_id,
             date_from=date_from,
-            date_to=date_to
+            date_to=date_to,
         )
-        
+
         stmt = (
             select(AuditLog)
             .where(and_(*clauses) if clauses else True)
@@ -82,7 +85,7 @@ class AuditRepository(BaseRepository[AuditLog]):
         entity_id: Optional[uuid.UUID] = None,
         request_id: Optional[str] = None,
         date_from: Optional[datetime] = None,
-        date_to: Optional[datetime] = None
+        date_to: Optional[datetime] = None,
     ) -> int:
         """Count total audit logs matching filters."""
         clauses = self._build_filter_stmt(
@@ -92,9 +95,9 @@ class AuditRepository(BaseRepository[AuditLog]):
             entity_id=entity_id,
             request_id=request_id,
             date_from=date_from,
-            date_to=date_to
+            date_to=date_to,
         )
-        
+
         stmt = (
             select(func.count())
             .select_from(AuditLog)

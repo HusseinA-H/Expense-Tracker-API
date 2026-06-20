@@ -29,9 +29,13 @@ def process_receipt_image(transaction_id: str, file_path: str) -> dict[str, Any]
     return _run_async(_process_receipt_image_async(transaction_id, file_path))
 
 
-async def _process_receipt_image_async(transaction_id: str, file_path: str) -> dict[str, Any]:
+async def _process_receipt_image_async(
+    transaction_id: str, file_path: str
+) -> dict[str, Any]:
     if not os.path.isfile(file_path):
-        logger.warning("Receipt file not found", file_path=file_path, transaction_id=transaction_id)
+        logger.warning(
+            "Receipt file not found", file_path=file_path, transaction_id=transaction_id
+        )
         return {"status": "failed", "reason": "file_not_found", "file_path": file_path}
 
     metadata: dict[str, Any] = {

@@ -1,5 +1,7 @@
 import os
+
 from celery import Celery
+
 from app.config import settings
 
 # Dynamically discover available task modules
@@ -14,7 +16,7 @@ celery_app = Celery(
     "expense_tracker",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=include_modules
+    include=include_modules,
 )
 
 celery_app.conf.update(
@@ -33,6 +35,7 @@ celery_app.conf.update(
 
 try:
     from app.tasks.celery_beat_schedule import CELERY_BEAT_SCHEDULE
+
     celery_app.conf.beat_schedule = CELERY_BEAT_SCHEDULE
 except ImportError:
     pass

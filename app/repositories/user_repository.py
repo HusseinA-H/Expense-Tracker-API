@@ -1,7 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.user import User
 from app.repositories.base import BaseRepository
+
 
 class UserRepository(BaseRepository[User]):
     """Repository handling user-specific database queries."""

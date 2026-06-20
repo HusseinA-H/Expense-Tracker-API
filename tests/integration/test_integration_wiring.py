@@ -25,7 +25,9 @@ async def test_password_reset_request_returns_204_for_known_user(
         mock_delay.assert_called_once()
 
 
-async def test_password_reset_request_returns_204_for_unknown_email(client: AsyncClient):
+async def test_password_reset_request_returns_204_for_unknown_email(
+    client: AsyncClient,
+):
     response = await client.post(
         "/api/v1/auth/password-reset/request",
         json={"email": "missing@example.com"},
@@ -85,8 +87,12 @@ async def test_csv_export_endpoint_queues_task(client: AsyncClient, auth_headers
         mock_delay.assert_called_once_with(ANY, "2026-06-01", "2026-06-30")
 
 
-async def test_monthly_report_endpoint_queues_task(client: AsyncClient, auth_headers: dict):
-    with patch("app.api.v1.endpoints.reports.generate_monthly_report.delay") as mock_delay:
+async def test_monthly_report_endpoint_queues_task(
+    client: AsyncClient, auth_headers: dict
+):
+    with patch(
+        "app.api.v1.endpoints.reports.generate_monthly_report.delay"
+    ) as mock_delay:
         mock_delay.return_value = MagicMock(id="monthly-task-456")
         response = await client.post(
             "/api/v1/reports/export/monthly",

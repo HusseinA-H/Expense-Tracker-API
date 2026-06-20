@@ -1,23 +1,24 @@
 from contextlib import asynccontextmanager
+
 import structlog
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.exceptions import RequestValidationError
 
+from app.api.health import router as health_router
+from app.api.v1.router import api_router
 from app.config import settings
-from app.core.exceptions import AppException
 from app.core.error_handlers import (
     app_exception_handler,
-    validation_exception_handler,
     unhandled_exception_handler,
+    validation_exception_handler,
 )
+from app.core.exceptions import AppException
 from app.core.middleware import LoggingAndRequestIdMiddleware
 from app.core.telemetry import instrument_fastapi, setup_telemetry
-from app.utils.logging import setup_logging
-from app.api.v1.router import api_router
-from app.api.health import router as health_router
 from app.events.handlers import register_event_handlers
+from app.utils.logging import setup_logging
 
 logger = structlog.get_logger("app.main")
 
@@ -41,6 +42,7 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("Stopping Expense Tracker API...")
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -90,6 +92,7 @@ async def root():
 async def health_check():
     """Backward-compatible liveness endpoint."""
     return {"status": "ok", "version": settings.APP_VERSION}
+
 
 instrument_fastapi(app)
 

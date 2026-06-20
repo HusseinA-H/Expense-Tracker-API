@@ -1,13 +1,16 @@
 import uuid
-import structlog
 from typing import List, Tuple
-from app.core.exceptions import AuthenticationError, NotFoundError, ConflictError
+
+import structlog
+
+from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
 from app.core.security import hash_password, verify_password
 from app.db.unit_of_work import SQLAlchemyUnitOfWork
 from app.models.user import User
 from app.schemas.user import UserUpdate
 
 logger = structlog.get_logger("app.services.user")
+
 
 class UserService:
     """Service handling user profile updates, password changes, deactivations, and admin lookups."""
@@ -21,8 +24,7 @@ class UserService:
             user = await self.uow.users.get(user_id)
             if not user:
                 raise NotFoundError(
-                    message="User not found.",
-                    error_code="USER_NOT_FOUND"
+                    message="User not found.", error_code="USER_NOT_FOUND"
                 )
 
             # Apply fields that are provided
@@ -32,7 +34,7 @@ class UserService:
 
             await self.uow.users.update(user)
             await self.uow.commit()
-            
+
             logger.info("User profile updated", user_id=str(user.id))
             return user
 
@@ -44,15 +46,14 @@ class UserService:
             user = await self.uow.users.get(user_id)
             if not user:
                 raise NotFoundError(
-                    message="User not found.",
-                    error_code="USER_NOT_FOUND"
+                    message="User not found.", error_code="USER_NOT_FOUND"
                 )
 
             # Verify current password
             if not verify_password(current_password, user.hashed_password):
                 raise AuthenticationError(
                     message="Incorrect current password.",
-                    error_code="INVALID_CREDENTIALS"
+                    error_code="INVALID_CREDENTIALS",
                 )
 
             # Update password
@@ -63,9 +64,14 @@ class UserService:
             try:
                 from app.events.base import event_bus
                 from app.events.definitions import PasswordChanged
+
                 await event_bus.publish(PasswordChanged(user_id=user.id))
             except Exception as e:
-                logger.error("Failed to publish PasswordChanged event", error=str(e), exc_info=True)
+                logger.error(
+                    "Failed to publish PasswordChanged event",
+                    error=str(e),
+                    exc_info=True,
+                )
 
             logger.info("User password changed successfully", user_id=str(user.id))
             return user
@@ -76,8 +82,7 @@ class UserService:
             user = await self.uow.users.get(user_id)
             if not user:
                 raise NotFoundError(
-                    message="User not found.",
-                    error_code="USER_NOT_FOUND"
+                    message="User not found.", error_code="USER_NOT_FOUND"
                 )
 
             user.is_active = False
@@ -87,13 +92,20 @@ class UserService:
             try:
                 from app.events.base import event_bus
                 from app.events.definitions import UserDeactivated
+
                 await event_bus.publish(UserDeactivated(user_id=user.id))
             except Exception as e:
-                logger.error("Failed to publish UserDeactivated event", error=str(e), exc_info=True)
+                logger.error(
+                    "Failed to publish UserDeactivated event",
+                    error=str(e),
+                    exc_info=True,
+                )
 
             logger.info("User account deactivated", user_id=str(user.id))
 
-    async def list_users(self, page: int = 1, per_page: int = 20) -> Tuple[List[User], int]:
+    async def list_users(
+        self, page: int = 1, per_page: int = 20
+    ) -> Tuple[List[User], int]:
         """List users in the system (Admin only). Returns (items, total_count)."""
         async with self.uow:
             users = await self.uow.users.get_multi(page=page, per_page=per_page)
