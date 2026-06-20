@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" role="img" aria-label="Database ERD">
+  <rect width="900" height="560" fill="#f8fafc" rx="12"/>
+  <text x="450" y="36" fill="#0f172a" font-family="Segoe UI,sans-serif" font-size="20" font-weight="700" text-anchor="middle">Entity Relationship Diagram</text>
+  <style>.t{font-family:Segoe UI,sans-serif;font-size:12px;fill:#0f172a}.h{font-weight:700;font-size:13px}</style>
+  <rect x="40" y="60" width="180" height="120" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="130" y="85" class="t h" text-anchor="middle">users</text>
+  <text x="50" y="105" class="t">PK id (UUID)</text>
+  <text x="50" y="125" class="t">email (unique)</text>
+  <text x="50" y="145" class="t">hashed_password, role</text>
+  <text x="50" y="165" class="t">is_active, currency</text>
+  <rect x="280" y="60" width="180" height="120" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="370" y="85" class="t h" text-anchor="middle">categories</text>
+  <text x="290" y="105" class="t">PK id ù FK user_id</text>
+  <text x="290" y="125" class="t">name, icon, color</text>
+  <text x="290" y="145" class="t">is_system flag</text>
+  <rect x="520" y="60" width="200" height="140" rx="8" fill="#fef3c7" stroke="#ca8a04" stroke-width="2"/>
+  <text x="620" y="85" class="t h" text-anchor="middle">transactions</text>
+  <text x="530" y="105" class="t">PK id ù FK user_id</text>
+  <text x="530" y="125" class="t">FK category_id</text>
+  <text x="530" y="145" class="t">type, amount, currency</text>
+  <text x="530" y="165" class="t">date, receipt_url, tags</text>
+  <text x="530" y="185" class="t">soft delete (deleted_at)</text>
+  <rect x="40" y="240" width="180" height="100" rx="8" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+  <text x="130" y="265" class="t h" text-anchor="middle">budgets</text>
+  <text x="50" y="285" class="t">FK user_id, category_id</text>
+  <text x="50" y="305" class="t">limit_amount, month, year</text>
+  <text x="50" y="315" class="t">alert_threshold, alert_sent</text>
+  <rect x="280" y="240" width="180" height="100" rx="8" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="370" y="265" class="t h" text-anchor="middle">refresh_tokens</text>
+  <text x="290" y="285" class="t">FK user_id</text>
+  <text x="290" y="305" class="t">token_hash, expires_at</text>
+  <text x="290" y="315" class="t">revoked_at</text>
+  <rect x="520" y="240" width="200" height="100" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="620" y="265" class="t h" text-anchor="middle">audit_logs</text>
+  <text x="530" y="285" class="t">actor_id, action, entity</text>
+  <text x="530" y="305" class="t">entity_id, metadata (JSONB)</text>
+  <text x="530" y="315" class="t">append-only trail</text>
+  <line x1="220" y1="120" x2="280" y2="120" stroke="#64748b" stroke-width="2"/>
+  <line x1="460" y1="120" x2="520" y2="120" stroke="#64748b" stroke-width="2"/>
+  <line x1="130" y1="180" x2="130" y2="240" stroke="#64748b" stroke-width="2"/>
+  <line x1="370" y1="180" x2="370" y2="240" stroke="#64748b" stroke-width="2"/>
+  <line x1="130" y1="180" x2="130" y2="240" stroke="#64748b" stroke-width="2"/>
+  <line x1="130" y1="180" x2="490" y2="290" stroke="#64748b" stroke-width="2" stroke-dasharray="4"/>
+  <rect x="40" y="400" width="680" height="120" rx="8" fill="#fff" stroke="#cbd5e1"/>
+  <text x="380" y="430" class="t h" text-anchor="middle">View: expenses (backward compatibility)</text>
+  <text x="380" y="455" class="t" text-anchor="middle">SQL view over transactions WHERE transaction_type = 'expense'</text>
+  <text x="380" y="480" class="t" text-anchor="middle">Indexes: GIN on tags ù partial index on active transactions ù composite user+date</text>
+  <text x="380" y="505" class="t" text-anchor="middle">Partition-ready audit_logs by created_at (maintenance task)</text>
+</svg>
